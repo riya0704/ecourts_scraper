@@ -1,0 +1,9 @@
+{
+  "query": {
+    "case_identifier": "MHMU01234567890123",
+    "date_checked": "2025-10-14",
+    "timestamp": "2025-10-14T06:44:09.878293"
+  },
+  "listed": false,
+  "note": "Case not found with current heuristics. The eCourts website may have changed or case may not be listed."
+}

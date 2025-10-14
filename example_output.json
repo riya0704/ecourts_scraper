@@ -1,0 +1,13 @@
+{
+  "query": {
+    "cnr": "CNR123456789012",
+    "date_checked": [
+      "2025-10-14"
+    ]
+  },
+  "listed": true,
+  "serial_number": "5",
+  "court_name": "District Court, Lucknow",
+  "case_pdf": "outputs/cases/CNR123456789012.pdf",
+  "cause_list_pdf": "outputs/causelists/causelist_2025-10-14.pdf"
+}

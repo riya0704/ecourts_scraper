@@ -1,0 +1,8 @@
+{
+  "query": {
+    "case_identifier": "MH123456789012345",
+    "date_checked": "2025-10-14"
+  },
+  "listed": false,
+  "note": "Case not found with heuristics. Try --today/--tomorrow explicitly or enable Selenium-based scraping."
+}

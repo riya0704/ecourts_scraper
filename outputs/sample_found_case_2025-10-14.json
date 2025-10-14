@@ -1,0 +1,12 @@
+{
+  "query": {
+    "case_identifier": "SAMPLE123456789012",
+    "date_checked": "2025-10-14",
+    "timestamp": "2025-10-14T12:00:00"
+  },
+  "listed": true,
+  "serial_number": "42",
+  "court_name": "Sample District Court",
+  "matched_line": "42. CR 123/2024 - Sample Case vs. Demo Defendant",
+  "note": "This is a sample result to show successful case finding"
+}
