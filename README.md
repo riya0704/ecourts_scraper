@@ -132,7 +132,7 @@ python scraper.py --cnr "DLCT01234567890123" --date "2024-10-25"
 
 Start the API server:
 ```bash
-python api_app.py
+python app.py
 ```
 
 API Endpoints:

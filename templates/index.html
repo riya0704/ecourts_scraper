@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eCourts Real-Time Cause List Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group select:disabled,
+        .form-group input:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status-section {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 5px solid #28a745;
+            display: none;
+        }
+
+        .status-section.error {
+            background: #ffeaea;
+            border-left-color: #dc3545;
+        }
+
+        .status-section.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .status-section h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .download-links {
+            margin-top: 20px;
+        }
+
+        .download-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .download-link:hover {
+            background: #218838;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            color: #0c5460;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>eCourts Real-Time Cause List Downloader</h1>
+            <p>Download cause lists in PDF format with real-time court data fetching</p>
+        </div>
+
+        <div class="main-content">
+            <div class="info-box">
+                <h3>🚀 Features</h3>
+                <ul>
+                    <li>Real-time fetching of States, Districts, Court Complexes, and Courts</li>
+                    <li>Download cause lists for specific courts and dates</li>
+                    <li>Bulk download all cause lists for a court complex</li>
+                    <li>Automatic PDF generation and download</li>
+                </ul>
+            </div>
+
+            <div class="form-section">
+                <h2>📍 Select Court Location</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <select id="state" onchange="loadDistricts()">
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <select id="district" onchange="loadComplexes()" disabled>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="complex">Court Complex</label>
+                        <select id="complex" onchange="loadCourts()" disabled>
+                            <option value="">Select Court Complex</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="court">Court Name (Optional for bulk download)</label>
+                        <select id="court" disabled>
+                            <option value="">Select Court</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>📅 Select Date</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Cause List Date</label>
+                        <input type="date" id="date" value="">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="downloadSingle()" id="downloadSingleBtn" disabled>
+                        📄 Download Single Court Cause List
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadComplex()" id="downloadComplexBtn" disabled>
+                        📦 Download All Courts in Complex
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-section" id="statusSection">
+                <h3 id="statusTitle">Status</h3>
+                <p id="statusMessage"></p>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="download-links" id="downloadLinks"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+        // Load states on page load
+        window.onload = function() {
+            loadStates();
+        };
+
+        async function loadStates() {
+            const stateSelect = document.getElementById('state');
+            stateSelect.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/states');
+                const states = await response.json();
+                
+                stateSelect.innerHTML = '<option value="">Select State</option>';
+                states.forEach(state => {
+                    stateSelect.innerHTML += `<option value="${state.value}">${state.text}</option>`;
+                });
+            } catch (error) {
+                showStatus('Error loading states: ' + error.message, 'error');
+            } finally {
+                stateSelect.classList.remove('loading');
+            }
+        }
+
+        async function loadDistricts() {
+            const stateCode = document.getElementById('state').value;
+            const districtSelect = document.getElementById('district');
+            
+            // Reset dependent dropdowns
+            resetDropdown('district');
+            resetDropdown('complex');
+            resetDropdown('court');
+            updateButtonStates();
+            
+            if (!stateCode) return;
+            
+            districtSelect.classList.add('loading');
+            districtSelect.disabled = false;
+            
+            try {
+                const response = await fetch(`/api/districts/${stateCode}`);
+                const districts = await response.json();
+                
+                districtSelect.innerHTML = '<option value="">Select District</option>';
+                districts.forEach(district => {
+                    districtSelect.innerHTML += `<option value="${district.value}">${district.text}</option>`;
+                });
+            } catch (error) {
+                showStatus('Error loading districts: ' + error.message, 'error');
+            } finally {
+                districtSelect.classList.remove('loading');
+            }
+        }
+
+        async function loadComplexes() {
+            const stateCode = document.getElementById('state').value;
+            const districtCode = document.getElementById('district').value;
+            const complexSelect = document.getElementById('complex');
+            
+            // Reset dependent dropdowns
+            resetDropdown('complex');
+            resetDropdown('court');
+            updateButtonStates();
+            
+            if (!stateCode || !districtCode) return;
+            
+            complexSelect.classList.add('loading');
+            complexSelect.disabled = false;
+            
+            try {
+                const response = await fetch(`/api/complexes/${stateCode}/${districtCode}`);
+                const complexes = await response.json();
+                
+                complexSelect.innerHTML = '<option value="">Select Court Complex</option>';
+                complexes.forEach(complex => {
+                    complexSelect.innerHTML += `<option value="${complex.value}">${complex.text}</option>`;
+                });
+            } catch (error) {
+                showStatus('Error loading court complexes: ' + error.message, 'error');
+            } finally {
+                complexSelect.classList.remove('loading');
+            }
+        }
+
+        async function loadCourts() {
+            const stateCode = document.getElementById('state').value;
+            const districtCode = document.getElementById('district').value;
+            const complexCode = document.getElementById('complex').value;
+            const courtSelect = document.getElementById('court');
+            
+            // Reset court dropdown
+            resetDropdown('court');
+            updateButtonStates();
+            
+            if (!stateCode || !districtCode || !complexCode) return;
+            
+            courtSelect.classList.add('loading');
+            courtSelect.disabled = false;
+            
+            try {
+                const response = await fetch(`/api/courts/${stateCode}/${districtCode}/${complexCode}`);
+                const courts = await response.json();
+                
+                courtSelect.innerHTML = '<option value="">Select Court (Optional)</option>';
+                courts.forEach(court => {
+                    courtSelect.innerHTML += `<option value="${court.value}">${court.text}</option>`;
+                });
+                
+                // Enable buttons when complex is selected
+                updateButtonStates();
+            } catch (error) {
+                showStatus('Error loading courts: ' + error.message, 'error');
+            } finally {
+                courtSelect.classList.remove('loading');
+            }
+        }
+
+        function resetDropdown(id) {
+            const dropdown = document.getElementById(id);
+            dropdown.innerHTML = `<option value="">Select ${id.charAt(0).toUpperCase() + id.slice(1)}</option>`;
+            dropdown.disabled = true;
+        }
+
+        function updateButtonStates() {
+            const stateCode = document.getElementById('state').value;
+            const districtCode = document.getElementById('district').value;
+            const complexCode = document.getElementById('complex').value;
+            const courtCode = document.getElementById('court').value;
+            const date = document.getElementById('date').value;
+            
+            const singleBtn = document.getElementById('downloadSingleBtn');
+            const complexBtn = document.getElementById('downloadComplexBtn');
+            
+            // Enable single download if court is selected
+            singleBtn.disabled = !(stateCode && districtCode && complexCode && courtCode && date);
+            
+            // Enable complex download if complex is selected
+            complexBtn.disabled = !(stateCode && districtCode && complexCode && date);
+        }
+
+        // Update button states when date changes
+        document.getElementById('date').addEventListener('change', updateButtonStates);
+
+        async function downloadSingle() {
+            const data = {
+                state_code: document.getElementById('state').value,
+                district_code: document.getElementById('district').value,
+                complex_code: document.getElementById('complex').value,
+                court_code: document.getElementById('court').value,
+                date: document.getElementById('date').value
+            };
+            
+            showStatus('Downloading cause list...', 'info');
+            showProgress(0);
+            
+            try {
+                const response = await fetch('/api/download_single', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showProgress(100);
+                    showStatus(`Successfully downloaded cause list!`, 'success');
+                    addDownloadLink(result.filename, `Size: ${(result.size / 1024).toFixed(1)} KB`);
+                } else {
+                    showStatus('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error downloading cause list: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadComplex() {
+            const data = {
+                state_code: document.getElementById('state').value,
+                district_code: document.getElementById('district').value,
+                complex_code: document.getElementById('complex').value,
+                date: document.getElementById('date').value
+            };
+            
+            showStatus('Downloading cause lists for all courts in complex...', 'info');
+            showProgress(0);
+            
+            try {
+                const response = await fetch('/api/download_complex', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showProgress(100);
+                    showStatus(`Successfully downloaded ${result.courts_downloaded} out of ${result.total_courts} cause lists!`, 'success');
+                    addDownloadLink(result.filename, `ZIP file with ${result.courts_downloaded} PDFs`);
+                } else {
+                    showStatus('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showStatus('Error downloading cause lists: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusSection = document.getElementById('statusSection');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            statusSection.className = 'status-section';
+            if (type === 'error') {
+                statusSection.classList.add('error');
+                statusTitle.textContent = '❌ Error';
+            } else if (type === 'success') {
+                statusSection.classList.add('success');
+                statusTitle.textContent = '✅ Success';
+            } else if (type === 'warning') {
+                statusSection.classList.add('warning');
+                statusTitle.textContent = '⚠️ Warning';
+            } else {
+                statusTitle.textContent = '📡 Status';
+            }
+            
+            statusMessage.textContent = message;
+            statusSection.style.display = 'block';
+        }
+
+        function showProgress(percentage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (percentage > 0) {
+                progressBar.style.display = 'block';
+                progressFill.style.width = percentage + '%';
+            } else {
+                progressBar.style.display = 'none';
+            }
+        }
+
+        function addDownloadLink(filename, description) {
+            const downloadLinks = document.getElementById('downloadLinks');
+            const link = document.createElement('a');
+            link.href = `/download/${filename}`;
+            link.className = 'download-link';
+            link.textContent = `📥 Download ${description}`;
+            link.target = '_blank';
+            
+            downloadLinks.innerHTML = '';
+            downloadLinks.appendChild(link);
+        }
+    </script>
+</body>
+</html>
