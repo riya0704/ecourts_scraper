@@ -58,6 +58,10 @@ pip install -r requirements.txt
 ### 2. Basic Usage
 
 ```bash
+
+# run the application
+
+python app.py
 # Check case by CNR for today
 python scraper.py --cnr "MHMU01234567890123" --today
 
